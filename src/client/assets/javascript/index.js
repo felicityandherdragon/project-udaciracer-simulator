@@ -1,10 +1,14 @@
 // PROVIDED CODE BELOW (LINES 1 - 80) DO NOT REMOVE
 
 // The store will hold all information needed globally
-let store = {
+let store = Immutable.Map({
 	track_id: undefined,
 	player_id: undefined,
 	race_id: undefined,
+});
+
+const updateStore = (state, newState) => {
+	store = store.merge(state, newState);
 }
 
 // We need our javascript to wait until the DOM is loaded
@@ -15,14 +19,24 @@ document.addEventListener("DOMContentLoaded", function() {
 
 async function onPageLoad() {
 	try {
-		getTracks()
+		await getTracks()
+			.then((res) => {
+				return res.json();
+			})
 			.then(tracks => {
+				//NOTE: remove later
+				console.log('tracks', tracks);
 				const html = renderTrackCards(tracks)
 				renderAt('#tracks', html)
 			})
 
-		getRacers()
+		await getRacers()
+			.then((res) => {
+				return res.json();
+			})
 			.then((racers) => {
+				//NOTE: remove later
+				console.log('racers', racers)
 				const html = renderRacerCars(racers)
 				renderAt('#racers', html)
 			})
@@ -35,21 +49,24 @@ async function onPageLoad() {
 function setupClickHandlers() {
 	document.addEventListener('click', function(event) {
 		const { target } = event
+		console.log('target', target, target.parentNode);
 
 		// Race track form field
-		if (target.matches('.card.track')) {
-			handleSelectTrack(target)
+		if (target.matches('.card.track') || target.parentNode.matches('.card.track')) {
+			const cardToProcess = target.matches('.card.track') ? target : target.parentNode;
+			handleSelectTrack(cardToProcess)
 		}
 
 		// Podracer form field
-		if (target.matches('.card.podracer')) {
-			handleSelectPodRacer(target)
+		if (target.matches('.card.podracer') || target.parentNode.matches('.card.podracer')) {
+			const cardToProcess = target.matches('.card.podracer') ? target : target.parentNode;
+			handleSelectPodRacer(cardToProcess)
 		}
 
 		// Submit create race form
 		if (target.matches('#submit-create-race')) {
 			event.preventDefault()
-	
+
 			// start race
 			handleCreateRace()
 		}
@@ -78,12 +95,12 @@ async function handleCreateRace() {
 	renderAt('#race', renderRaceStartView())
 
 	// TODO - Get player_id and track_id from the store
-	
+
 	// const race = TODO - invoke the API call to create the race, then save the result
 
 	// TODO - update the store with the race id
 	// For the API to work properly, the race id should be race id - 1
-	
+
 	// The race has been created, now start the countdown
 	// TODO - call the async function runCountdown
 
@@ -96,13 +113,13 @@ function runRace(raceID) {
 	return new Promise(resolve => {
 	// TODO - use Javascript's built in setInterval method to get race info every 500ms
 
-	/* 
+	/*
 		TODO - if the race info status property is "in-progress", update the leaderboard by calling:
 
 		renderAt('#leaderBoard', raceProgress(res.positions))
 	*/
 
-	/* 
+	/*
 		TODO - if the race info status property is "finished", run the following:
 
 		clearInterval(raceInterval) // to stop the interval from repeating
@@ -146,6 +163,10 @@ function handleSelectPodRacer(target) {
 	target.classList.add('selected')
 
 	// TODO - save the selected racer to the store
+	updateStore(store, {
+		racer_id: target.id
+	})
+	console.log('racer_id', store.get('racer_id'))
 }
 
 function handleSelectTrack(target) {
@@ -161,7 +182,10 @@ function handleSelectTrack(target) {
 	target.classList.add('selected')
 
 	// TODO - save the selected track id to the store
-	
+	updateStore(store, {
+		track_id: target.id
+	})
+	console.log('track_id', store.get('track_id'))
 }
 
 function handleAccelerate() {
@@ -189,14 +213,27 @@ function renderRacerCars(racers) {
 }
 
 function renderRacerCard(racer) {
+	const imageMapping = {
+		1:'elf',
+		2:'gnome',
+		3:'kobold',
+		4:'dwarf',
+		5:'ogre'
+	}
+
 	const { id, driver_name, top_speed, acceleration, handling } = racer
 
 	return `
 		<li class="card podracer" id="${id}">
 			<h3>${driver_name}</h3>
-			<p>${top_speed}</p>
-			<p>${acceleration}</p>
-			<p>${handling}</p>
+			<div class="racer-description">
+				<div>
+					<p>${top_speed}</p>
+					<p>${acceleration}</p>
+					<p>${handling}</p>
+				</div>
+				<img class="racer-image" src='../../assets/images/${imageMapping[id]}.png' />
+			</div>
 		</li>
 	`
 }
@@ -318,21 +355,23 @@ function defaultFetchOpts() {
 	}
 }
 
-// TODO - Make a fetch call (with error handling!) to each of the following API endpoints 
+// TODO - Make a fetch call (with error handling!) to each of the following API endpoints
 
 function getTracks() {
 	// GET request to `${SERVER}/api/tracks`
+	return fetch(`${SERVER}/api/tracks`);
 }
 
 function getRacers() {
 	// GET request to `${SERVER}/api/cars`
+	return fetch(`${SERVER}/api/cars`);
 }
 
 function createRace(player_id, track_id) {
 	player_id = parseInt(player_id)
 	track_id = parseInt(track_id)
 	const body = { player_id, track_id }
-	
+
 	return fetch(`${SERVER}/api/races`, {
 		method: 'POST',
 		...defaultFetchOpts(),
