@@ -3,9 +3,27 @@
 /* -------------------  MOBILE  --------------------- */
 
 header {
-  background-image: url('https://via.placeholder.com/1150');
+  background-image: url('../images/create-header.png');
+  background-position: center;
 }
 
+#racers li {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+}
+
+.racer-description {
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  padding: 3px;
+}
+
+.racer-image {
+  width: 100px;
+  margin: 0 5px 0 5px;
+}
 
 /* -------------------  TABLET  --------------------- */
 @media (min-width: 768px) {
