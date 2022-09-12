@@ -5,6 +5,7 @@ let store = Immutable.Map({
 	track_id: undefined,
 	player_id: undefined,
 	race_id: undefined,
+	racer_id: undefined
 });
 
 const updateStore = (state, newState) => {
@@ -51,6 +52,12 @@ function setupClickHandlers() {
 		const { target } = event
 		console.log('target', target, target.parentNode);
 
+		if (target.matches('#start-race')) {
+			updateStore(store, {
+				player_id: 1
+			})
+		}
+
 		// Race track form field
 		if (target.matches('.card.track') || target.parentNode.matches('.card.track')) {
 			const cardToProcess = target.matches('.card.track') ? target : target.parentNode;
@@ -92,17 +99,26 @@ async function delay(ms) {
 // This async function controls the flow of the race, add the logic and error handling
 async function handleCreateRace() {
 	// render starting UI
-	renderAt('#race', renderRaceStartView())
 
 	// TODO - Get player_id and track_id from the store
+	const playerId = store.get('player_id');
+	const trackId = store.get('track_id');
 
 	// const race = TODO - invoke the API call to create the race, then save the result
+	const race = await createRace(playerId, trackId)
+		.then()
+	console.log('created race', race);
+	renderAt('#race', renderRaceStartView(race.Track));
 
 	// TODO - update the store with the race id
 	// For the API to work properly, the race id should be race id - 1
+	updateStore(store, {
+		race_id: race.id
+	})
 
 	// The race has been created, now start the countdown
 	// TODO - call the async function runCountdown
+	runCountdown();
 
 	// TODO - call the async function startRace
 
@@ -138,9 +154,14 @@ async function runCountdown() {
 
 		return new Promise(resolve => {
 			// TODO - use Javascript's built in setInterval method to count down once per second
-
-			// run this DOM manipulation to decrement the countdown for the user
-			document.getElementById('big-numbers').innerHTML = --timer
+			const countdownInterval = setInterval(() => {
+				if (timer <= 1) {
+					clearInterval(countdownInterval);
+					resolve();
+				}
+				// run this DOM manipulation to decrement the countdown for the user
+				document.getElementById('big-numbers').innerHTML = --timer
+			}, 1000)
 
 			// TODO - if the countdown is done, clear the interval, resolve the promise, and return
 
@@ -355,7 +376,7 @@ function defaultFetchOpts() {
 	}
 }
 
-// TODO - Make a fetch call (with error handling!) to each of the following API endpoints
+// NOTE - Make a fetch call (with error handling!) to each of the following API endpoints (done)
 
 function getTracks() {
 	// GET request to `${SERVER}/api/tracks`
