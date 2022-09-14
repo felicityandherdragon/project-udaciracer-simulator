@@ -5,7 +5,7 @@ let store = Immutable.Map({
 	track_id: undefined,
 	player_id: undefined,
 	race_id: undefined,
-	racer_id: undefined
+	racer_id: undefined //TODO: no need for racer id, just need player id.
 });
 
 const updateStore = (state, newState) => {
@@ -119,6 +119,7 @@ async function handleCreateRace() {
 	// TODO - call the async function runCountdown
 	await runCountdown();
 
+	console.log('race id', store.get('race_id'))
 	// TODO - call the async function startRace
 	await startRace(store.get('race_id'));
 
@@ -128,16 +129,32 @@ async function handleCreateRace() {
 
 async function runRace(raceID) {
 	try {
+		let timer = 10;
+
 		return new Promise(resolve => {
 		// TODO - use Javascript's built in setInterval method to get race info every 500ms
-			
+			const runInterval = setInterval(() => {
+				getRace(store.get('race_id'))
+					.then((response) => {
+						return response.json();
+					})
+					.then((result) => {
+						console.log('result', result);
+						if (result.status === 'finished' || timer <= 0) {
+							clearInterval(runInterval);
+							renderAt('#race', resultsView(result.positions));
+						}
+
+						timer--;
+						renderAt('#leaderBoard', raceProgress(result.positions));
+						resolve([]);
+					})
+			}, 500)
 		/*
 			TODO - if the race info status property is "in-progress", update the leaderboard by calling:
 
 			renderAt('#leaderBoard', raceProgress(res.positions))
-		*/
 
-		/*
 			TODO - if the race info status property is "finished", run the following:
 
 			clearInterval(raceInterval) // to stop the interval from repeating
@@ -333,7 +350,8 @@ function resultsView(positions) {
 }
 
 function raceProgress(positions) {
-	let userPlayer = positions.find(e => e.id === store.player_id)
+	console.log('positions', positions, 'player_id', store.get('player_id'), 'type of player id', typeof(store.get('player_id')));
+	let userPlayer = positions.find(e => e.id === store.get('player_id'))
 	userPlayer.driver_name += " (you)"
 
 	positions = positions.sort((a, b) => (a.segment > b.segment) ? -1 : 1)
