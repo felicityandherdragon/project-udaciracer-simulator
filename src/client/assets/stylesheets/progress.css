@@ -2,8 +2,8 @@
 
 /* -------------------  MOBILE  --------------------- */
 header {
-  background-image: url('../images/create-header.png');
-  background-position: center;
+    background: rgb(232,185,125);
+    background: linear-gradient(6deg, rgba(232,185,125,1) 0%, rgba(20,50,25,0.6881346288515406) 100%);
 }
 
 main#two-columns {

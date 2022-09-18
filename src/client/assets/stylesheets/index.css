@@ -25,7 +25,8 @@ body {
 }
 
 header {
-  background-image: url('../images/homepage-header.png');
+  background: rgb(232,185,125);
+  background: linear-gradient(6deg, rgba(232,185,125,1) 0%, rgba(20,50,25,0.6881346288515406) 100%);
   background-size: cover;
   background-repeat: no-repeat;
   background-position: top;
