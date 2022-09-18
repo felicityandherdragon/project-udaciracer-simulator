@@ -1,6 +1,7 @@
 form ul {
     display: flex;
     padding: 20px;
+    overflow: scroll;
 }
 
 form li {
@@ -8,7 +9,7 @@ form li {
     -webkit-box-shadow: 5px 7px 5px 0px rgba(237,230,237,1);
     -moz-box-shadow: 5px 7px 5px 0px rgba(237,230,237,1);
     box-shadow: 5px 7px 5px 0px rgba(237,230,237,1);
-    max-width: 300px;
+    min-width: max-content;
     padding: 20px;
     border: 2px solid #fbf5f5;
     cursor: pointer;

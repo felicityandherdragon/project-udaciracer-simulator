@@ -8,6 +8,50 @@ let store = Immutable.Map({
   race_length: undefined,
 });
 
+const imageMapping = {
+  1: 'elf',
+  2: 'gnome',
+  3: 'kobold',
+  4: 'dwarf',
+  5: 'ogre',
+};
+
+const nameMapping = {
+  'Racer 1': '🗡️ Elf',
+  'Racer 2': '🗡️ Gnome',
+  'Racer 3': '🗡️ Kobold',
+  'Racer 4': '🗡️ Dwarf',
+  'Racer 5': '🗡️ Ogre',
+};
+
+const dungeonNameMapping = {
+  'Track 1': {
+    name: '🛡️ Budou Pit',
+    description: 'Dwarf-style, on the verge of collapsing',
+  },
+  'Track 2': {
+    name: '🛡️ Brud Dungeon Cluster',
+    description: 'Dwarf-style, fully captured and made part of the town',
+  },
+  'Track 3': {
+    name: '🛡️ The Island',
+    description: 'Compound-style, discovered in 507',
+  },
+  'Track 4': {
+    name: '🛡️ Tower of Night Cries',
+    description:
+      'Gnome style, captured and being sealed under administration of the gnomes',
+  },
+  'Track 5': {
+    name: '🛡️ Utaya',
+    description: 'The dungeon near the village of Utaya',
+  },
+  'Track 6': {
+    name: '🛡️ The Black Forest Quarters',
+    description: 'On the verge of collapsing',
+  },
+};
+
 const updateStore = (state, newState) => {
   store = store.merge(state, newState);
 };
@@ -156,9 +200,10 @@ async function runRace(raceID) {
             if (result.status === 'finished' || reachedEnd) {
               clearInterval(runInterval);
               renderAt('#race', resultsView(result.positions));
+            } else {
+              renderAt('#leaderBoard', raceProgress(result.positions));
             }
 
-            renderAt('#leaderBoard', raceProgress(result.positions));
             resolve(result);
           });
       }, 500);
@@ -268,24 +313,16 @@ function renderRacerCars(racers) {
 }
 
 function renderRacerCard(racer) {
-  const imageMapping = {
-    1: 'elf',
-    2: 'gnome',
-    3: 'kobold',
-    4: 'dwarf',
-    5: 'ogre',
-  };
-
   const { id, driver_name, top_speed, acceleration, handling } = racer;
 
   return `
 		<li class="card podracer" id="${id}">
-			<h3>${driver_name}</h3>
+			<h3>${nameMapping[driver_name]}</h3>
 			<div class="racer-description">
 				<div>
-					<p>Top Speed: ${top_speed}</p>
-					<p>Acceleration: ${acceleration}</p>
-					<p>Handling: ${handling}</p>
+					<p><b>Top Speed</b> <br /> ${top_speed}</p>
+					<p><b>Acceleration</b> <br /> ${acceleration}</p>
+					<p><b>Handling</b> <br /> ${handling}</p>
 				</div>
 				<img class="racer-image" src='../../assets/images/${imageMapping[id]}.png' />
 			</div>
@@ -314,8 +351,9 @@ function renderTrackCard(track) {
 
   return `
 		<li id="${id}" class="card track" data-length=${segments.length}>
-			<h3>${name}</h3>
-			<p>Track length: ${segments.length}</p>
+			<h3>${dungeonNameMapping[name].name}</h3>
+			<p><b>Length</b> <br />${segments.length}</p>
+			<p><b>Description</b> <br />${dungeonNameMapping[name].description}</p>
 		</li>
 	`;
 }
@@ -356,35 +394,39 @@ function resultsView(positions) {
 		</header>
 		<main>
 			${raceProgress(positions)}
-			<a href="/race">Start a new race</a>
+			<a class="button" href="/race">Start a new race</a>
 		</main>
 	`;
 }
 
 function raceProgress(positions) {
   let userPlayer = positions.find((e) => e.id === store.get('player_id') * 1);
-  userPlayer.driver_name += ' (you)';
+  if (!userPlayer) throw 'Failed to find matching user player!';
 
   positions = positions.sort((a, b) => (a.segment > b.segment ? -1 : 1));
   let count = 1;
 
-  const results = positions.map((p) => {
-    return `
+  const results = positions
+    .map((p) => {
+      return `
 			<tr>
 				<td>
-					<h3>${count++} - ${p.driver_name}</h3>
+					<h3>${count++} - ${
+        p.driver_name === userPlayer.driver_name
+          ? nameMapping[p.driver_name] + ' (you)'
+          : nameMapping[p.driver_name]
+      }</h3>
 				</td>
 			</tr>
 		`;
-  });
+    })
+    .join('');
+
+  console.log('what is this results thing looking like?', results);
 
   return `
-		<main>
 			<h3>Leaderboard</h3>
-			<section id="leaderBoard">
-				${results}
-			</section>
-		</main>
+			${results}
 	`;
 }
 
