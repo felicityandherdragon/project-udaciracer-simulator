@@ -1,5 +1,3 @@
-// PROVIDED CODE BELOW (LINES 1 - 80) DO NOT REMOVE
-
 // The store will hold all information needed globally
 let store = Immutable.Map({
   track_id: undefined,
@@ -56,7 +54,6 @@ const updateStore = (state, newState) => {
   store = store.merge(state, newState);
 };
 
-// We need our javascript to wait until the DOM is loaded
 document.addEventListener('DOMContentLoaded', function () {
   onPageLoad();
   setupClickHandlers();
@@ -69,8 +66,6 @@ async function onPageLoad() {
         return res.json();
       })
       .then((tracks) => {
-        //NOTE: remove later
-        console.log('tracks', tracks);
         const html = renderTrackCards(tracks);
         renderAt('#tracks', html);
       });
@@ -80,8 +75,6 @@ async function onPageLoad() {
         return res.json();
       })
       .then((racers) => {
-        //NOTE: remove later
-        console.log('racers', racers);
         const html = renderRacerCars(racers);
         renderAt('#racers', html);
       });
@@ -144,37 +137,21 @@ async function delay(ms) {
     console.log(error);
   }
 }
-// ^ PROVIDED CODE ^ DO NOT REMOVE
 
-// This async function controls the flow of the race, add the logic and error handling
 async function handleCreateRace() {
-  // render starting UI
-
-  // TODO - Get player_id and track_id from the store
   const playerId = store.get('player_id');
   const trackId = store.get('track_id');
 
-  console.log('what is the trackId being sent to createRace?', trackId);
-  // const race = TODO - invoke the API call to create the race, then save the result
   const race = await createRace(playerId, trackId);
-  console.log('created race', race);
   renderAt('#race', renderRaceStartView(race.Track, race.Cars));
 
-  // TODO - update the store with the race id
-  // For the API to work properly, the race id should be race id - 1
+  //NOTE: For the API to work properly, the race id should be race id - 1
   updateStore(store, {
     race_id: parseInt(race.ID) - 1,
   });
 
-  // The race has been created, now start the countdown
-  // TODO - call the async function runCountdown
   await runCountdown();
-
-  console.log('race id', store.get('race_id'));
-  // TODO - call the async function startRace
   await startRace(store.get('race_id'));
-
-  // TODO - call the async function runRace
   await runRace(store.get('race_id'));
 }
 
@@ -183,14 +160,12 @@ async function runRace(raceID) {
     const trackLength = store.get('track_length');
 
     return new Promise((resolve) => {
-      // TODO - use Javascript's built in setInterval method to get race info every 500ms
       const runInterval = setInterval(() => {
         getRace(raceID)
           .then((response) => {
             return response.json();
           })
           .then((result) => {
-            console.log('result', result);
             const reachedEnd =
               result.positions.find(
                 (player) => player.segment * 1 >= trackLength
@@ -207,21 +182,9 @@ async function runRace(raceID) {
             resolve(result);
           });
       }, 500);
-      /*
-			TODO - if the race info status property is "in-progress", update the leaderboard by calling:
-
-			renderAt('#leaderBoard', raceProgress(res.positions))
-
-			TODO - if the race info status property is "finished", run the following:
-
-			clearInterval(raceInterval) // to stop the interval from repeating
-			renderAt('#race', resultsView(res.positions)) // to render the results view
-			reslove(res) // resolve the promise
-		*/
     });
   } catch (error) {
-    // remember to add error handling for the Promise
-    console.log(error);
+    console.log('error happened when running race', error);
   }
 }
 
@@ -232,18 +195,14 @@ async function runCountdown() {
     let timer = 3;
 
     return new Promise((resolve) => {
-      // TODO - use Javascript's built in setInterval method to count down once per second
       const countdownInterval = setInterval(() => {
         if (timer <= 0) {
           clearInterval(countdownInterval);
           resolve('done');
           return;
         }
-        // run this DOM manipulation to decrement the countdown for the user
         document.getElementById('big-numbers').innerHTML = --timer;
       }, 1000);
-
-      // TODO - if the countdown is done, clear the interval, resolve the promise, and return
     });
   } catch (error) {
     console.log(error);
@@ -252,17 +211,13 @@ async function runCountdown() {
 
 function handleSelectPodRacer(target) {
   console.log('selected a pod', target.id);
-
-  // remove class selected from all racer options
   const selected = document.querySelector('#racers .selected');
   if (selected) {
     selected.classList.remove('selected');
   }
 
-  // add class selected to current target
   target.classList.add('selected');
 
-  // TODO - save the selected racer to the store
   updateStore(store, {
     player_id: target.id,
   });
@@ -271,16 +226,13 @@ function handleSelectPodRacer(target) {
 function handleSelectTrack(target) {
   console.log('selected a track', target.id);
 
-  // remove class selected from all track options
   const selected = document.querySelector('#tracks .selected');
   if (selected) {
     selected.classList.remove('selected');
   }
 
-  // add class selected to current target
   target.classList.add('selected');
 
-  // TODO - save the selected track id to the store
   updateStore(store, {
     track_id: target.id,
     track_length: target.dataset.length,
@@ -289,13 +241,10 @@ function handleSelectTrack(target) {
 
 async function handleAccelerate() {
   console.log('accelerate button clicked');
-  // TODO - Invoke the API call to accelerate
   await accelerate(store.get('race_id'));
 }
 
 // HTML VIEWS ------------------------------------------------
-// Provided code - do not remove
-
 function renderRacerCars(racers) {
   if (!racers.length) {
     return `
@@ -324,7 +273,6 @@ function renderRacerCard(racer) {
 					<p><b>Acceleration</b> <br /> ${acceleration}</p>
 					<p><b>Handling</b> <br /> ${handling}</p>
 				</div>
-				<img class="racer-image" src='../../assets/images/${imageMapping[id]}.png' />
 			</div>
 		</li>
 	`;
@@ -422,8 +370,6 @@ function raceProgress(positions) {
     })
     .join('');
 
-  console.log('what is this results thing looking like?', results);
-
   return `
 			<h3>Leaderboard</h3>
 			${results}
@@ -436,10 +382,6 @@ function renderAt(element, html) {
   node.innerHTML = html;
 }
 
-// ^ Provided code ^ do not remove
-
-// API CALLS ------------------------------------------------
-
 const SERVER = 'http://localhost:8000';
 
 function defaultFetchOpts() {
@@ -451,8 +393,6 @@ function defaultFetchOpts() {
     },
   };
 }
-
-// NOTE - Make a fetch call (with error handling!) to each of the following API endpoints (done)
 
 function getTracks() {
   // GET request to `${SERVER}/api/tracks`
