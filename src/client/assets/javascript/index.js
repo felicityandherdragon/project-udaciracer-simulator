@@ -51,7 +51,7 @@ const dungeonNameMapping = {
 };
 
 const updateStore = (state, newState) => {
-  store = store.merge(state, newState);
+  store = state.merge(newState);
 };
 
 document.addEventListener('DOMContentLoaded', function () {
