@@ -1,5 +1,5 @@
 // The store will hold all information needed globally
-const store = Immutable.Map({
+let store = Immutable.Map({
   track_id: undefined,
   player_id: undefined,
   race_id: undefined,
