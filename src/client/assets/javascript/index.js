@@ -1,5 +1,5 @@
 // The store will hold all information needed globally
-let store = Immutable.Map({
+const store = Immutable.Map({
   track_id: undefined,
   player_id: undefined,
   race_id: undefined,
@@ -142,17 +142,21 @@ async function handleCreateRace() {
   const playerId = store.get('player_id');
   const trackId = store.get('track_id');
 
-  const race = await createRace(playerId, trackId);
-  renderAt('#race', renderRaceStartView(race.Track, race.Cars));
+  try {
+    const race = await createRace(playerId, trackId);
+    renderAt('#race', renderRaceStartView(race.Track, race.Cars));
 
-  //NOTE: For the API to work properly, the race id should be race id - 1
-  updateStore(store, {
-    race_id: parseInt(race.ID) - 1,
-  });
+    //NOTE: For the API to work properly, the race id should be race id - 1
+    updateStore(store, {
+      race_id: parseInt(race.ID) - 1,
+    });
 
-  await runCountdown();
-  await startRace(store.get('race_id'));
-  await runRace(store.get('race_id'));
+    await runCountdown();
+    await startRace(store.get('race_id'));
+    await runRace(store.get('race_id'));
+  } catch(err) {
+    console.log(err);
+  }
 }
 
 async function runRace(raceID) {
@@ -348,7 +352,7 @@ function resultsView(positions) {
 }
 
 function raceProgress(positions) {
-  let userPlayer = positions.find((e) => e.id === store.get('player_id') * 1);
+  const userPlayer = positions.find((e) => e.id === store.get('player_id') * 1);
   if (!userPlayer) throw 'Failed to find matching user player!';
 
   positions = positions.sort((a, b) => (a.segment > b.segment ? -1 : 1));
@@ -396,12 +400,12 @@ function defaultFetchOpts() {
 
 function getTracks() {
   // GET request to `${SERVER}/api/tracks`
-  return fetch(`${SERVER}/api/tracks`);
+  return fetch(`${SERVER}/api/tracks`).catch(err => console.log(err));;
 }
 
 function getRacers() {
   // GET request to `${SERVER}/api/cars`
-  return fetch(`${SERVER}/api/cars`);
+  return fetch(`${SERVER}/api/cars`).catch(err => console.log(err));
 }
 
 function createRace(player_id, track_id) {
@@ -421,7 +425,7 @@ function createRace(player_id, track_id) {
 
 function getRace(id) {
   // GET request to `${SERVER}/api/races/${id}`
-  return fetch(`${SERVER}/api/races/${id}`);
+  return fetch(`${SERVER}/api/races/${id}`).catch(err => console.log(err));;
 }
 
 async function startRace(id) {
